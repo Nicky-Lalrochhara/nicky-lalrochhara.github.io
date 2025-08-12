@@ -1,42 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Quiz questions
     const quizQuestions = [
-        {
-            question: "What is the capital of France?",
-            options: ["London", "Berlin", "Paris", "Madrid"],
-            answer: "Paris"
-        },
-        {
-            question: "Which planet is known as the Red Planet?",
-            options: ["Venus", "Mars", "Jupiter", "Saturn"],
-            answer: "Mars"
-        },
-        {
-            question: "What is the largest mammal in the world?",
-            options: ["Elephant", "Blue Whale", "Giraffe", "Polar Bear"],
-            answer: "Blue Whale"
-        },
-        {
-            question: "Which language runs in a web browser?",
-            options: ["Java", "C", "Python", "JavaScript"],
-            answer: "JavaScript"
-        },
-        {
-            question: "What year was JavaScript launched?",
-            options: ["1996", "1995", "1994", "none of the above"],
-            answer: "1995"
-        }
+        { question: "What is the capital of France?", options: ["London", "Berlin", "Paris", "Madrid"], answer: "Paris" },
+        { question: "Which planet is known as the Red Planet?", options: ["Venus", "Mars", "Jupiter", "Saturn"], answer: "Mars" },
+        { question: "What is the largest mammal in the world?", options: ["Elephant", "Blue Whale", "Giraffe", "Polar Bear"], answer: "Blue Whale" },
+        { question: "Which language runs in a web browser?", options: ["Java", "C", "Python", "JavaScript"], answer: "JavaScript" },
+        { question: "What year was JavaScript launched?", options: ["1996", "1995", "1994", "none of the above"], answer: "1995" }
     ];
 
-    // DOM elements
     const questionElement = document.querySelector('.question');
     const optionsContainer = document.querySelector('.options-container');
     const questionCountElement = document.querySelector('.question-count');
     const scoreElement = document.querySelector('.score');
     const timerElement = document.querySelector('.timer');
-    const prevButton = document.getElementById('prev-btn');
-    const nextButton = document.getElementById('next-btn');
-    const submitButton = document.getElementById('submit-btn');
     const restartButton = document.getElementById('restart-btn');
     const quizBody = document.querySelector('.quiz-body');
     const quizResult = document.querySelector('.quiz-result');
@@ -47,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const timeTakenElement = document.getElementById('time-taken');
     const confettiContainer = document.querySelector('.confetti-container');
 
-    // Quiz state
     let currentQuestionIndex = 0;
     let score = 0;
     let selectedOptions = Array(quizQuestions.length).fill(null);
@@ -56,88 +30,75 @@ document.addEventListener('DOMContentLoaded', () => {
     let quizStartTime;
     let totalTimeTaken = 0;
 
-    // Initialize quiz
     function initQuiz() {
         quizStartTime = new Date();
         loadQuestion();
         startTimer();
     }
 
-    // Load question
     function loadQuestion() {
         const currentQuestion = quizQuestions[currentQuestionIndex];
         questionElement.textContent = currentQuestion.question;
-        
-        // Update question count
         questionCountElement.textContent = `Question: ${currentQuestionIndex + 1}/${quizQuestions.length}`;
-        
-        // Clear previous options
         optionsContainer.innerHTML = '';
-        
-        // Create options
-        currentQuestion.options.forEach((option, index) => {
+
+        currentQuestion.options.forEach(option => {
             const optionElement = document.createElement('div');
             optionElement.classList.add('option');
             optionElement.textContent = option;
-            
-            // Check if this option was previously selected
-            if (selectedOptions[currentQuestionIndex] === option) {
-                optionElement.classList.add('selected');
-            }
-            
-            optionElement.addEventListener('click', () => selectOption(option, optionElement));
+
+            optionElement.addEventListener('click', () => {
+                if (selectedOptions[currentQuestionIndex] !== null) return;
+
+                selectedOptions[currentQuestionIndex] = option;
+
+                if (option === currentQuestion.answer) {
+                    optionElement.style.backgroundColor = 'lightgreen';
+                    score++;
+                    updateScore();
+                } else {
+                    optionElement.style.backgroundColor = 'lightcoral';
+                    [...optionsContainer.children].forEach(child => {
+                        if (child.textContent === currentQuestion.answer) {
+                            child.style.backgroundColor = 'lightgreen';
+                        }
+                    });
+                }
+
+                [...optionsContainer.children].forEach(child => {
+                    child.style.pointerEvents = 'none';
+                });
+
+                clearInterval(timer);
+
+                setTimeout(() => {
+                    if (currentQuestionIndex < quizQuestions.length - 1) {
+                        currentQuestionIndex++;
+                        loadQuestion();
+                        startTimer();
+                    } else {
+                        submitQuiz();
+                    }
+                }, 1000);
+            });
+
             optionsContainer.appendChild(optionElement);
         });
-        
-        // Update button states
-        prevButton.disabled = currentQuestionIndex === 0;
-        nextButton.disabled = false;
-        
-        // Show submit button only on last question
-        if (currentQuestionIndex === quizQuestions.length - 1) {
-            nextButton.classList.add('hidden');
-            submitButton.classList.remove('hidden');
-        } else {
-            nextButton.classList.remove('hidden');
-            submitButton.classList.add('hidden');
-        }
     }
 
-    // Select option
-    function selectOption(option, optionElement) {
-        // Remove selected class from all options
-        document.querySelectorAll('.option').forEach(opt => {
-            opt.classList.remove('selected');
-        });
-        
-        // Add selected class to clicked option
-        optionElement.classList.add('selected');
-        
-        // Store selected option
-        selectedOptions[currentQuestionIndex] = option;
-    }
-
-    // Check answer
-    function checkAnswer() {
-        const currentQuestion = quizQuestions[currentQuestionIndex];
-        return selectedOptions[currentQuestionIndex] === currentQuestion.answer;
-    }
-
-    // Update score
     function updateScore() {
         scoreElement.textContent = `Score: ${score}`;
     }
 
-    // Start timer
     function startTimer() {
         clearInterval(timer);
         timeLeft = 30;
         timerElement.textContent = `Time: ${timeLeft}s`;
-        
+
         timer = setInterval(() => {
             timeLeft--;
             timerElement.textContent = `Time: ${timeLeft}s`;
-            
+
             if (timeLeft <= 0) {
                 clearInterval(timer);
                 autoProceed();
@@ -145,99 +106,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
-    // Auto proceed when time runs out
     function autoProceed() {
-        if (currentQuestionIndex < quizQuestions.length - 1) {
-            nextQuestion();
-        } else {
-            submitQuiz();
+        if (selectedOptions[currentQuestionIndex] === null) {
+            // Mark unanswered as wrong, highlight correct
+            [...optionsContainer.children].forEach(child => {
+                if (child.textContent === quizQuestions[currentQuestionIndex].answer) {
+                    child.style.backgroundColor = 'lightgreen';
+                }
+            });
         }
-    }
-
-    // Next question
-    function nextQuestion() {
-        // Check if an option is selected
-        if (selectedOptions[currentQuestionIndex] !== null) {
-            if (checkAnswer()) {
-                score++;
-                updateScore();
+        setTimeout(() => {
+            if (currentQuestionIndex < quizQuestions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+                startTimer();
+            } else {
+                submitQuiz();
             }
-            
-            currentQuestionIndex++;
-            loadQuestion();
-            startTimer();
-        } else {
-            alert('Please select an option before proceeding.');
-        }
+        }, 1000);
     }
 
-    // Previous question
-    function prevQuestion() {
-        currentQuestionIndex--;
-        loadQuestion();
-        startTimer();
-    }
-
-    // Submit quiz
     function submitQuiz() {
         clearInterval(timer);
-        
-        // Calculate final score
-        for (let i = 0; i < quizQuestions.length; i++) {
-            if (selectedOptions[i] === quizQuestions[i].answer) {
-                score++;
-            }
-        }
-        
-        // Calculate time taken
         const quizEndTime = new Date();
         totalTimeTaken = Math.floor((quizEndTime - quizStartTime) / 1000);
-        
-        // Show results
         showResults();
     }
 
-    // Show results
     function showResults() {
         quizBody.classList.add('hidden');
         quizResult.classList.remove('hidden');
-        
+
         finalScoreElement.textContent = score;
         correctAnswersElement.textContent = score;
         wrongAnswersElement.textContent = quizQuestions.length - score;
         totalQuestionsElement.textContent = quizQuestions.length;
         timeTakenElement.textContent = totalTimeTaken;
-        
-        // Show confetti if score is good
+
         if (score >= quizQuestions.length * 0.7) {
             createConfetti();
         }
     }
 
-    // Restart quiz
     function restartQuiz() {
-        // Reset quiz state
         currentQuestionIndex = 0;
         score = 0;
         selectedOptions = Array(quizQuestions.length).fill(null);
         totalTimeTaken = 0;
-        
-        // Update UI
         quizBody.classList.remove('hidden');
         quizResult.classList.add('hidden');
         scoreElement.textContent = `Score: 0`;
-        
-        // Clear confetti
         confettiContainer.innerHTML = '';
-        
-        // Start quiz again
         initQuiz();
     }
 
-    // Create confetti effect
     function createConfetti() {
         const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
-        
         for (let i = 0; i < 100; i++) {
             const confetti = document.createElement('div');
             confetti.style.position = 'absolute';
@@ -249,20 +173,13 @@ document.addEventListener('DOMContentLoaded', () => {
             confetti.style.top = '-10px';
             confetti.style.opacity = Math.random();
             confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
-            
             const animationDuration = Math.random() * 3 + 2;
             confetti.style.animation = `fall ${animationDuration}s linear forwards`;
-            
             confettiContainer.appendChild(confetti);
-            
-            // Remove confetti after animation
-            setTimeout(() => {
-                confetti.remove();
-            }, animationDuration * 1000);
+            setTimeout(() => confetti.remove(), animationDuration * 1000);
         }
     }
 
-    // Add CSS for confetti animation
     const style = document.createElement('style');
     style.textContent = `
         @keyframes fall {
@@ -274,12 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.head.appendChild(style);
 
-    // Event listeners
-    nextButton.addEventListener('click', nextQuestion);
-    prevButton.addEventListener('click', prevQuestion);
-    submitButton.addEventListener('click', submitQuiz);
     restartButton.addEventListener('click', restartQuiz);
-
-    // Start the quiz
     initQuiz();
 });
