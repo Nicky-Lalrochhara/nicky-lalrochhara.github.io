@@ -211,13 +211,4 @@ body {
         width: 100%;
         justify-content: center;
     }
-    .correct {
-    background-color: #4CAF50; /* Green */
-    color: white;
-}
-
-.wrong {
-    background-color: #f44336; /* Red */
-    color: white;
-}
 }
