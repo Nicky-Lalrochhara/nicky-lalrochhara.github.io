@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Quiz Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Cosmic Quiz</h1>
+            <div class="quiz-info">
+                <span class="question-count">Question: 1/5</span>
+                <span class="score">Score: 0</span>
+                <span class="timer">Time: 30s</span>
+            </div>
+        </div>
+        
+        <div class="quiz-body">
+            <div class="question-container">
+                <h2 class="question">Loading question...</h2>
+            </div>
+            
+            <div class="options-container">
+                <!-- Options will be inserted here by JavaScript -->
+            </div>
+            
+            <div class="quiz-controls">
+                <button id="prev-btn" class="control-btn" disabled>
+                    <i class="fas fa-arrow-left"></i> Previous
+                </button>
+                <button id="next-btn" class="control-btn">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+                <button id="submit-btn" class="control-btn submit-btn">
+                    Submit Quiz
+                </button>
+            </div>
+        </div>
+        
+        <div class="quiz-result hidden">
+            <h2>Quiz Completed!</h2>
+            <div class="result-details">
+                <p>Your Score: <span id="final-score">0</span>/<span id="total-questions">0</span></p>
+                <p>Correct Answers: <span id="correct-answers">0</span></p>
+                <p>Wrong Answers: <span id="wrong-answers">0</span></p>
+                <p>Time Taken: <span id="time-taken">0</span>s</p>
+            </div>
+            <button id="restart-btn" class="control-btn submit-btn">
+                <i class="fas fa-redo"></i> Restart Quiz
+            </button>
+        </div>
+    </div>
+    
+    <div class="confetti-container"></div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
