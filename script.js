@@ -67,32 +67,36 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadQuestion() {
         const currentQuestion = quizQuestions[currentQuestionIndex];
         questionElement.textContent = currentQuestion.question;
-        
+
         // Update question count
         questionCountElement.textContent = `Question: ${currentQuestionIndex + 1}/${quizQuestions.length}`;
-        
+
         // Clear previous options
         optionsContainer.innerHTML = '';
-        
+
         // Create options
-        currentQuestion.options.forEach((option, index) => {
+        currentQuestion.options.forEach(option => {
             const optionElement = document.createElement('div');
             optionElement.classList.add('option');
             optionElement.textContent = option;
-            
-            // Check if this option was previously selected
+
+            // Restore previous answer highlight if navigating back
             if (selectedOptions[currentQuestionIndex] === option) {
-                optionElement.classList.add('selected');
+                if (option === currentQuestion.answer) {
+                    optionElement.classList.add('correct');
+                } else {
+                    optionElement.classList.add('wrong');
+                }
             }
-            
+
             optionElement.addEventListener('click', () => selectOption(option, optionElement));
             optionsContainer.appendChild(optionElement);
         });
-        
+
         // Update button states
         prevButton.disabled = currentQuestionIndex === 0;
         nextButton.disabled = false;
-        
+
         // Show submit button only on last question
         if (currentQuestionIndex === quizQuestions.length - 1) {
             nextButton.classList.add('hidden');
@@ -105,16 +109,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Select option
     function selectOption(option, optionElement) {
-        // Remove selected class from all options
+        const currentQuestion = quizQuestions[currentQuestionIndex];
+
+        // Remove previous highlight
         document.querySelectorAll('.option').forEach(opt => {
-            opt.classList.remove('selected');
+            opt.classList.remove('selected', 'correct', 'wrong');
         });
-        
-        // Add selected class to clicked option
-        optionElement.classList.add('selected');
-        
+
         // Store selected option
         selectedOptions[currentQuestionIndex] = option;
+
+        // If answer is correct
+        if (option === currentQuestion.answer) {
+            optionElement.classList.add('correct');
+        } else {
+            // Mark wrong answer in red
+            optionElement.classList.add('wrong');
+
+            // Highlight correct answer in green
+            document.querySelectorAll('.option').forEach(opt => {
+                if (opt.textContent === currentQuestion.answer) {
+                    opt.classList.add('correct');
+                }
+            });
+        }
     }
 
     // Check answer
@@ -133,11 +151,11 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(timer);
         timeLeft = 30;
         timerElement.textContent = `Time: ${timeLeft}s`;
-        
+
         timer = setInterval(() => {
             timeLeft--;
             timerElement.textContent = `Time: ${timeLeft}s`;
-            
+
             if (timeLeft <= 0) {
                 clearInterval(timer);
                 autoProceed();
@@ -162,7 +180,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 score++;
                 updateScore();
             }
-            
             currentQuestionIndex++;
             loadQuestion();
             startTimer();
@@ -181,18 +198,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Submit quiz
     function submitQuiz() {
         clearInterval(timer);
-        
+
         // Calculate final score
         for (let i = 0; i < quizQuestions.length; i++) {
             if (selectedOptions[i] === quizQuestions[i].answer) {
                 score++;
             }
         }
-        
+
         // Calculate time taken
         const quizEndTime = new Date();
         totalTimeTaken = Math.floor((quizEndTime - quizStartTime) / 1000);
-        
+
         // Show results
         showResults();
     }
@@ -201,14 +218,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function showResults() {
         quizBody.classList.add('hidden');
         quizResult.classList.remove('hidden');
-        
+
         finalScoreElement.textContent = score;
         correctAnswersElement.textContent = score;
         wrongAnswersElement.textContent = quizQuestions.length - score;
         totalQuestionsElement.textContent = quizQuestions.length;
         timeTakenElement.textContent = totalTimeTaken;
-        
-        // Show confetti if score is good
+
         if (score >= quizQuestions.length * 0.7) {
             createConfetti();
         }
@@ -216,28 +232,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Restart quiz
     function restartQuiz() {
-        // Reset quiz state
         currentQuestionIndex = 0;
         score = 0;
         selectedOptions = Array(quizQuestions.length).fill(null);
         totalTimeTaken = 0;
-        
-        // Update UI
+
         quizBody.classList.remove('hidden');
         quizResult.classList.add('hidden');
         scoreElement.textContent = `Score: 0`;
-        
-        // Clear confetti
         confettiContainer.innerHTML = '';
-        
-        // Start quiz again
+
         initQuiz();
     }
 
     // Create confetti effect
     function createConfetti() {
         const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
-        
+
         for (let i = 0; i < 100; i++) {
             const confetti = document.createElement('div');
             confetti.style.position = 'absolute';
@@ -249,20 +260,19 @@ document.addEventListener('DOMContentLoaded', () => {
             confetti.style.top = '-10px';
             confetti.style.opacity = Math.random();
             confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
-            
+
             const animationDuration = Math.random() * 3 + 2;
             confetti.style.animation = `fall ${animationDuration}s linear forwards`;
-            
+
             confettiContainer.appendChild(confetti);
-            
-            // Remove confetti after animation
+
             setTimeout(() => {
                 confetti.remove();
             }, animationDuration * 1000);
         }
     }
 
-    // Add CSS for confetti animation
+    // Add CSS for confetti animation + answer colors
     const style = document.createElement('style');
     style.textContent = `
         @keyframes fall {
@@ -270,6 +280,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 transform: translateY(100vh) rotate(360deg);
                 opacity: 0;
             }
+        }
+        .correct {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .wrong {
+            background-color: #f44336;
+            color: white;
         }
     `;
     document.head.appendChild(style);
@@ -280,6 +298,5 @@ document.addEventListener('DOMContentLoaded', () => {
     submitButton.addEventListener('click', submitQuiz);
     restartButton.addEventListener('click', restartQuiz);
 
-    // Start the quiz
     initQuiz();
 });
